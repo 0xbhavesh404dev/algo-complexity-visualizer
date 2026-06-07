@@ -1,492 +1,209 @@
 import { useState } from "react";
+import "./App.css";
+import { dynamic } from "./styles.js";
 
 const API = "http://localhost:5050";
 
 const ALGOS = {
-  bubble: { label: "Bubble Sort", complexity: "O(n²)", color: "#d9534f" },
-  merge: { label: "Merge Sort", complexity: "O(n log n)", color: "#3a7bd5" },
-  quick: {
-    label: "Quick Sort",
-    complexity: "O(n log n) / worst O(n²)",
-    color: "#2e8b57",
-  },
+  bubble: { label: "Bubble", full: "Bubble Sort", color: "#c0392b" },
+  merge:  { label: "Merge",  full: "Merge Sort",  color: "#2471a3" },
+  quick:  { label: "Quick",  full: "Quick Sort",  color: "#1e8449" },
 };
 
 const SCENARIOS = [
-  { key: "random", label: "Random", note: "Quick Sort's ideal case" },
-  {
-    key: "sorted",
-    label: "Already Sorted",
-    note: "Quick Sort's worst case (naive pivot)",
-  },
-  {
-    key: "reverse",
-    label: "Reverse Sorted",
-    note: "Quick Sort degrades badly",
-  },
-  {
-    key: "nearly_sorted",
-    label: "Nearly Sorted",
-    note: "Interesting middle ground",
-  },
-  {
-    key: "many_duplicates",
-    label: "Many Duplicates",
-    note: "Tests duplicate handling",
-  },
+  { key: "random",          label: "random array",       hint: "quick sort's sweet spot"   },
+  { key: "sorted",          label: "already sorted",     hint: "kills naive quick sort"     },
+  { key: "reverse",         label: "reverse sorted",     hint: "quick sort worst case"      },
+  { key: "nearly_sorted",   label: "nearly sorted",      hint: "interesting middle ground"  },
+  { key: "many_duplicates", label: "lots of duplicates", hint: "partition skew test"        },
 ];
-
-function Bar({ label, timeMs, maxTime, color, complexity, isWinner }) {
-  const pct = maxTime > 0 ? Math.max(4, (timeMs / maxTime) * 100) : 4;
-  return (
-    <div style={{ marginBottom: 20 }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          marginBottom: 5,
-          alignItems: "center",
-        }}
-      >
-        <span
-          style={{
-            fontWeight: 600,
-            fontSize: 14,
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-          }}
-        >
-          {label}
-          {isWinner && (
-            <span
-              style={{
-                fontSize: 11,
-                background: "#222",
-                color: "#fff",
-                padding: "1px 7px",
-                borderRadius: 10,
-              }}
-            >
-              faster
-            </span>
-          )}
-        </span>
-        <span style={{ color: "#888", fontFamily: "monospace", fontSize: 12 }}>
-          {complexity}
-        </span>
-      </div>
-      <div style={{ background: "#eee", borderRadius: 2, height: 12 }}>
-        <div
-          style={{
-            width: `${pct}%`,
-            background: color,
-            height: "100%",
-            borderRadius: 2,
-            transition: "width 0.5s ease",
-          }}
-        />
-      </div>
-      <div
-        style={{
-          fontSize: 12,
-          color: "#555",
-          marginTop: 4,
-          fontFamily: "monospace",
-        }}
-      >
-        {timeMs.toFixed(4)} ms
-      </div>
-    </div>
-  );
-}
-
-function Section({ title, children }) {
-  return (
-    <div style={{ marginBottom: 28 }}>
-      <div
-        style={{
-          fontSize: 11,
-          fontWeight: 700,
-          letterSpacing: 1,
-          color: "#999",
-          textTransform: "uppercase",
-          marginBottom: 10,
-        }}
-      >
-        {title}
-      </div>
-      {children}
-    </div>
-  );
-}
 
 export default function App() {
   const [selected, setSelected] = useState(["merge", "quick"]);
-  const [input, setInput] = useState("");
-  const [result, setResult] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [mode, setMode] = useState("custom"); // "custom" | "scenario"
+  const [input, setInput]       = useState("");
+  const [mode, setMode]         = useState("custom");
   const [scenario, setScenario] = useState("random");
-  const [scenarioN, setScenarioN] = useState(300);
+  const [n, setN]               = useState(300);
+  const [result, setResult]     = useState(null);
+  const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState("");
 
-  function toggleAlgo(key) {
-    setSelected((prev) => {
-      if (prev.includes(key)) {
-        if (prev.length <= 2) return prev; // keep minimum 2
-        return prev.filter((k) => k !== key);
-      }
-      if (prev.length >= 3) return prev; // max 3
-      return [...prev, key];
+  function toggle(key) {
+    setSelected(prev => {
+      if (prev.includes(key)) return prev.length > 2 ? prev.filter(k => k !== key) : prev;
+      return prev.length < 3 ? [...prev, key] : prev;
     });
     setResult(null);
   }
 
-  async function runCustom() {
-    setError("");
-    setResult(null);
-    const nums = input
-      .split(/[\s,]+/)
-      .map((s) => s.trim())
-      .filter(Boolean)
-      .map(Number);
-    if (nums.some(isNaN)) {
-      setError("Numbers only — spaces or commas.");
-      return;
-    }
-    if (nums.length < 2) {
-      setError("Enter at least 2 numbers.");
-      return;
-    }
-    setLoading(true);
+  async function post(url, body) {
+    setError(""); setResult(null); setLoading(true);
     try {
-      const res = await fetch(`${API}/sort`, {
+      const r = await fetch(API + url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ numbers: nums, algorithms: selected }),
+        body: JSON.stringify(body),
       });
-      setResult(await res.json());
+      setResult(await r.json());
     } catch {
-      setError("Cannot reach Flask server on port 5050.");
+      setError("Flask server not reachable on port 5050.");
     }
     setLoading(false);
   }
 
-  async function runScenario() {
-    setError("");
+  function runCustom() {
+    const nums = input.split(/[\s,]+/).filter(Boolean).map(Number);
+    if (nums.some(isNaN)) { setError("numbers only please"); return; }
+    if (nums.length < 2)  { setError("need at least 2 numbers"); return; }
+    post("/sort", { numbers: nums, algorithms: selected });
+  }
+
+  function runScenario() {
+    post("/scenario", { scenario, n: Number(n), algorithms: selected });
+  }
+
+  function switchMode(m) {
+    setMode(m);
     setResult(null);
-    setLoading(true);
-    try {
-      const res = await fetch(`${API}/scenario`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ scenario, n: scenarioN, algorithms: selected }),
-      });
-      const data = await res.json();
-      setResult({ ...data, fromScenario: true });
-    } catch {
-      setError("Cannot reach Flask server on port 5050.");
-    }
-    setLoading(false);
+    setError("");
   }
 
   const maxTime = result
-    ? Math.max(...Object.values(result.results).map((r) => r.time_ms))
+    ? Math.max(...Object.values(result.results).map(r => r.time_ms))
     : 1;
 
-  const isMergeVsQuick =
-    selected.includes("merge") &&
-    selected.includes("quick") &&
-    !selected.includes("bubble");
-
   return (
-    <div
-      style={{
-        fontFamily: "Georgia, serif",
-        maxWidth: 560,
-        margin: "50px auto",
-        padding: "0 20px",
-        color: "#222",
-      }}
-    >
-      <h2 style={{ fontWeight: 700, fontSize: 22, marginBottom: 4 }}>
-        Sort Complexity
-      </h2>
-      <p style={{ color: "#777", fontSize: 13, margin: "0 0 28px" }}>
-        Compare sorting algorithms — real timing via Python
-      </p>
+    <div className="page">
+      <div className="heading">sort complexity</div>
+      <div className="sub">bubble / merge / quick — timed in python</div>
 
-      {/* Algorithm selector */}
-      <Section title="Algorithms (pick 2 or 3)">
-        <div style={{ display: "flex", gap: 10 }}>
+      {/* algorithm picker */}
+      <div>
+        <span className="field-label">algorithms (pick 2 or 3)</span>
+        <div className="btn-row">
           {Object.entries(ALGOS).map(([key, meta]) => {
             const on = selected.includes(key);
             return (
               <button
                 key={key}
-                onClick={() => toggleAlgo(key)}
-                style={{
-                  flex: 1,
-                  padding: "8px 6px",
-                  border: `2px solid ${on ? meta.color : "#ddd"}`,
-                  borderRadius: 3,
-                  background: on ? meta.color : "#fff",
-                  color: on ? "#fff" : "#555",
-                  cursor: "pointer",
-                  fontSize: 12,
-                  fontWeight: 600,
-                  transition: "all 0.15s",
-                }}
+                className={`algo-btn ${on ? "on" : "off"}`}
+                style={on ? { background: meta.color, border: `1px solid ${meta.color}` } : {}}
+                onClick={() => toggle(key)}
               >
                 {meta.label}
               </button>
             );
           })}
         </div>
-        {isMergeVsQuick && (
-          <p
-            style={{
-              fontSize: 12,
-              color: "#888",
-              margin: "8px 0 0",
-              fontStyle: "italic",
-            }}
-          >
-            Merge always splits in half · Quick uses first-element pivot
-            (textbook behaviour)
-          </p>
-        )}
-      </Section>
+      </div>
 
-      {/* Mode tabs */}
-      <Section title="Input">
-        <div
-          style={{
-            display: "flex",
-            gap: 0,
-            marginBottom: 14,
-            borderBottom: "1px solid #ddd",
-          }}
-        >
-          {["custom", "scenario"].map((m) => (
-            <button
-              key={m}
-              onClick={() => {
-                setMode(m);
-                setResult(null);
-                setError("");
-              }}
-              style={{
-                padding: "6px 16px",
-                border: "none",
-                borderBottom:
-                  mode === m ? "2px solid #222" : "2px solid transparent",
-                background: "none",
-                cursor: "pointer",
-                fontSize: 13,
-                fontWeight: mode === m ? 700 : 400,
-                color: mode === m ? "#222" : "#888",
-                marginBottom: -1,
-              }}
-            >
-              {m === "custom" ? "Your Numbers" : "Preset Scenarios"}
-            </button>
-          ))}
+      {/* mode tabs */}
+      <div className="tab-bar">
+        <button className={`tab-btn ${mode === "custom" ? "active" : "inactive"}`} onClick={() => switchMode("custom")}>
+          enter numbers
+        </button>
+        <button className={`tab-btn ${mode === "scenario" ? "active" : "inactive"}`} onClick={() => switchMode("scenario")}>
+          preset scenario
+        </button>
+      </div>
+
+      {/* custom input */}
+      {mode === "custom" && (
+        <div>
+          <span className="field-label">numbers (space or comma separated)</span>
+          <textarea
+            rows={2}
+            className="text-input"
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            placeholder="5 3 8 1 9 2 7 4 6"
+          />
+          <button className="run-btn" onClick={runCustom} disabled={loading}>
+            {loading ? "running..." : "run"}
+          </button>
         </div>
+      )}
 
-        {mode === "custom" && (
-          <>
-            <textarea
-              rows={3}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="e.g.  5 3 8 1 9 2 7 4 6"
-              style={{
-                width: "100%",
-                boxSizing: "border-box",
-                fontFamily: "monospace",
-                fontSize: 14,
-                padding: "8px 10px",
-                border: "1px solid #ccc",
-                borderRadius: 3,
-                resize: "none",
-                outline: "none",
-              }}
-            />
-            <button
-              onClick={runCustom}
-              disabled={loading}
-              style={{
-                marginTop: 10,
-                padding: "8px 20px",
-                background: "#222",
-                color: "#fff",
-                border: "none",
-                borderRadius: 3,
-                cursor: loading ? "not-allowed" : "pointer",
-                fontSize: 13,
-                opacity: loading ? 0.5 : 1,
-              }}
-            >
-              {loading ? "Running…" : "Run"}
-            </button>
-          </>
-        )}
-
-        {mode === "scenario" && (
-          <>
-            <div style={{ display: "grid", gap: 8 }}>
-              {SCENARIOS.map((s) => (
-                <label
-                  key={s.key}
-                  style={{
-                    display: "flex",
-                    alignItems: "flex-start",
-                    gap: 10,
-                    cursor: "pointer",
-                    padding: "8px 10px",
-                    border: `1px solid ${scenario === s.key ? "#222" : "#e0e0e0"}`,
-                    borderRadius: 3,
-                    background: scenario === s.key ? "#f8f8f8" : "#fff",
-                  }}
-                >
-                  <input
-                    type="radio"
-                    name="scenario"
-                    value={s.key}
-                    checked={scenario === s.key}
-                    onChange={() => setScenario(s.key)}
-                    style={{ marginTop: 2 }}
-                  />
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 600 }}>
-                      {s.label}
-                    </div>
-                    <div style={{ fontSize: 11, color: "#888" }}>{s.note}</div>
-                  </div>
-                </label>
-              ))}
-            </div>
-
+      {/* scenario input */}
+      {mode === "scenario" && (
+        <div>
+          <span className="field-label">scenario</span>
+          {SCENARIOS.map(sc => (
             <div
-              style={{
-                marginTop: 14,
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
-              }}
+              key={sc.key}
+              className={`radio-row ${scenario === sc.key ? "active" : "idle"}`}
+              onClick={() => setScenario(sc.key)}
             >
-              <label style={{ fontSize: 13, fontWeight: 600 }}>
-                Array size:
-              </label>
               <input
-                type="number"
-                min={10}
-                max={2000}
-                value={scenarioN}
-                onChange={(e) => setScenarioN(Number(e.target.value))}
-                style={{
-                  width: 80,
-                  padding: "5px 8px",
-                  border: "1px solid #ccc",
-                  borderRadius: 3,
-                  fontFamily: "monospace",
-                  fontSize: 13,
-                }}
+                type="radio"
+                name="sc"
+                checked={scenario === sc.key}
+                onChange={() => setScenario(sc.key)}
+                style={{ marginTop: 2 }}
               />
-              <span style={{ fontSize: 12, color: "#aaa" }}>max 2000</span>
+              <div>
+                <div className="radio-label">{sc.label}</div>
+                <div className="radio-hint">{sc.hint}</div>
+              </div>
             </div>
+          ))}
+          <div className="n-row">
+            <span>n =</span>
+            <input
+              type="number"
+              className="num-input"
+              min={10} max={2000}
+              value={n}
+              onChange={e => setN(e.target.value)}
+            />
+          </div>
+          <button className="run-btn" onClick={runScenario} disabled={loading}>
+            {loading ? "running..." : "run"}
+          </button>
+        </div>
+      )}
 
-            <button
-              onClick={runScenario}
-              disabled={loading}
-              style={{
-                marginTop: 12,
-                padding: "8px 20px",
-                background: "#222",
-                color: "#fff",
-                border: "none",
-                borderRadius: 3,
-                cursor: loading ? "not-allowed" : "pointer",
-                fontSize: 13,
-                opacity: loading ? 0.5 : 1,
-              }}
-            >
-              {loading ? "Running…" : "Run Scenario"}
-            </button>
-          </>
-        )}
-      </Section>
+      {error && <div className="error-msg">{error}</div>}
 
-      {error && <p style={{ color: "#c00", fontSize: 13 }}>{error}</p>}
-
+      {/* results */}
       {result && (
         <>
-          <Section title={`Results — n = ${result.input_size}`}>
-            {selected.map((key) => (
-              <Bar
-                key={key}
-                label={ALGOS[key].label}
-                timeMs={result.results[key].time_ms}
-                maxTime={maxTime}
-                color={ALGOS[key].color}
-                complexity={result.results[key].complexity}
-                isWinner={result.winner === key}
-              />
-            ))}
-          </Section>
+          <div className="divider" />
 
-          <Section title="Why">
-            <p
-              style={{
-                fontSize: 13,
-                lineHeight: 1.7,
-                margin: 0,
-                color: "#444",
-                background: "#f8f8f8",
-                padding: "12px 14px",
-                borderRadius: 3,
-                borderLeft: "3px solid #ddd",
-              }}
-            >
-              {result.insight}
-            </p>
-          </Section>
+          <div className="result-meta">
+            n = {result.input_size}
+            {result.fromScenario && <span>  ·  {result.scenario}</span>}
+          </div>
 
-          {result.fromScenario && result.sample && (
-            <Section title="Sample of generated array (first 20)">
-              <div
-                style={{
-                  fontFamily: "monospace",
-                  fontSize: 12,
-                  color: "#666",
-                  background: "#f5f5f5",
-                  padding: "8px 12px",
-                  borderRadius: 3,
-                }}
-              >
-                [{result.sample.join(", ")}…]
+          {selected.map(key => {
+            const r   = result.results[key];
+            const pct = Math.max(4, (r.time_ms / maxTime) * 100);
+            const isWinner = result.winner === key;
+            return (
+              <div key={key}>
+                <div className="bar-label">
+                  <span>
+                    {ALGOS[key].full}
+                    {isWinner && <span className="bar-winner">← faster</span>}
+                  </span>
+                  <span className="complexity">{r.complexity}</span>
+                </div>
+                <div className="bar-track">
+                  <div style={dynamic.barFill(pct, ALGOS[key].color)} />
+                </div>
+                <div className="bar-time">{r.time_ms.toFixed(4)} ms</div>
               </div>
-            </Section>
+            );
+          })}
+
+          <div className="insight-box">{result.insight}</div>
+
+          {result.sample && (
+            <div className="code-block">sample: [{result.sample.join(", ")}…]</div>
           )}
 
-          {!result.fromScenario && result.sorted && (
-            <Section title="Sorted output">
-              <div
-                style={{
-                  fontFamily: "monospace",
-                  fontSize: 12,
-                  color: "#666",
-                  background: "#f5f5f5",
-                  padding: "8px 12px",
-                  borderRadius: 3,
-                  wordBreak: "break-all",
-                }}
-              >
-                [{result.sorted.join(", ")}]
-              </div>
-            </Section>
+          {result.sorted && !result.fromScenario && (
+            <div className="code-block">sorted: [{result.sorted.join(", ")}]</div>
           )}
         </>
       )}
