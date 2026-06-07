@@ -11,11 +11,11 @@ const ALGOS = {
 };
 
 const SCENARIOS = [
-  { key: "random",          label: "random array",       hint: "quick sort's sweet spot"   },
-  { key: "sorted",          label: "already sorted",     hint: "kills naive quick sort"     },
-  { key: "reverse",         label: "reverse sorted",     hint: "quick sort worst case"      },
-  { key: "nearly_sorted",   label: "nearly sorted",      hint: "interesting middle ground"  },
-  { key: "many_duplicates", label: "lots of duplicates", hint: "partition skew test"        },
+  { key: "random",          label: "random array",       hint: "randomly ordered array"   },
+  { key: "sorted",          label: "already sorted",     hint: "ascending order"     },
+  { key: "reverse",         label: "reverse sorted",     hint: "descending order test case"      },
+  { key: "nearly_sorted",   label: "nearly sorted",      hint: "semi sorted test case"  },
+  { key: "many_duplicates", label: "lots of duplicates", hint: "duplicate test case"        },
 ];
 
 export default function App() {
