@@ -34,6 +34,9 @@ def _merge(l, r):
         else: res.append(r[j]); j += 1
     return res + l[i:] + r[j:]
 
+# ── Quick Sort (first-element pivot — intentionally naive) ───
+# This matches textbook Quick Sort and shows real O(n²) degradation
+# on sorted/reverse inputs, making merge vs quick comparison meaningful.
 def quick_sort(arr):
     a = copy.copy(arr)
     try:
