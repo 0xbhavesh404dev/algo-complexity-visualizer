@@ -1,0 +1,196 @@
+/* ── layout ── */
+.page {
+  font-family: "Courier New", monospace;
+  max-width: 580px;
+  margin: 48px auto;
+  padding: 0 24px;
+  color: #111;
+}
+.heading {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+.sub {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 32px;
+}
+
+/* ── form elements ── */
+.field-label {
+  font-size: 12px;
+  color: #555;
+  display: block;
+  margin-bottom: 6px;
+}
+.btn-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.algo-btn {
+  padding: 5px 14px;
+  font-size: 12px;
+  border-radius: 0;
+  cursor: pointer;
+}
+.algo-btn.off {
+  background: transparent;
+  border: 1px solid #bbb;
+  color: #555;
+}
+.algo-btn.on {
+  color: #fff;
+} /* border + background set inline (color varies per algo) */
+
+.tab-bar {
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 16px;
+}
+.tab-btn {
+  font-size: 12px;
+  padding: 4px 0;
+  margin-right: 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.tab-btn.active {
+  color: #111;
+  border-bottom: 1px solid #111;
+}
+.tab-btn.inactive {
+  color: #888;
+  border-bottom: 1px solid transparent;
+}
+
+.text-input {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: "Courier New", monospace;
+  font-size: 13px;
+  padding: 7px 10px;
+  border: 1px solid #ccc;
+  border-radius: 0;
+  outline: none;
+  resize: none;
+}
+.num-input {
+  width: 70px;
+  font-family: "Courier New", monospace;
+  font-size: 12px;
+  padding: 4px 8px;
+  border: 1px solid #ccc;
+  outline: none;
+  border-radius: 0;
+}
+.run-btn {
+  padding: 6px 18px;
+  font-size: 12px;
+  background: #111;
+  color: #fff;
+  border: none;
+  border-radius: 0;
+  margin-top: 10px;
+}
+.run-btn:not(:disabled) {
+  cursor: pointer;
+}
+.run-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── scenario list ── */
+.radio-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 6px 10px;
+  cursor: pointer;
+  margin-bottom: 4px;
+}
+.radio-row.active {
+  border-left: 2px solid #111;
+}
+.radio-row.idle {
+  border-left: 2px solid transparent;
+}
+.radio-label {
+  font-size: 12px;
+}
+.radio-hint {
+  font-size: 11px;
+  color: #999;
+}
+.n-row {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: #555;
+}
+
+/* ── results ── */
+.divider {
+  border-top: 1px solid #e0e0e0;
+  margin: 24px 0;
+}
+.result-meta {
+  font-size: 11px;
+  color: #999;
+  margin-bottom: 14px;
+}
+
+.bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  margin-bottom: 3px;
+}
+.bar-track {
+  height: 8px;
+  background: #ebebeb;
+  margin-bottom: 14px;
+}
+.bar-time {
+  font-size: 11px;
+  color: #777;
+  margin-bottom: 14px;
+  margin-top: -10px;
+}
+.bar-winner {
+  margin-left: 8px;
+  font-size: 10px;
+  color: #888;
+}
+.complexity {
+  font-size: 11px;
+  color: #999;
+}
+
+.insight-box {
+  font-size: 12px;
+  line-height: 1.7;
+  color: #444;
+  border-left: 2px solid #ddd;
+  padding-left: 12px;
+  margin-top: 16px;
+}
+.code-block {
+  font-family: "Courier New", monospace;
+  font-size: 11px;
+  background: #f5f5f5;
+  padding: 6px 10px;
+  color: #555;
+  margin-top: 8px;
+  word-break: break-all;
+}
+.error-msg {
+  font-size: 12px;
+  color: #c00;
+  margin-top: 10px;
+}
