@@ -5,6 +5,7 @@ import copy
 import random
 import sys
 
+
 sys.setrecursionlimit(100000)
 
 app = Flask(__name__)
