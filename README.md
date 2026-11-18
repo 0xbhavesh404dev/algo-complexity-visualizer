@@ -116,6 +116,10 @@ Then open the frontend URL, pick your algorithms, and either type numbers or run
 └── demo/ + screenshots/ # demo video & IDE screenshot
 ```
 
-## 🙌 Credits
+---
 
-A 1st-year team project — built with [yusufshereef](https://github.com/yusufshereef). Sorting algorithms, timing engine and insight builder implemented from scratch. 🙏
+<div align="center">
+
+**A 1st-year team project** 🤝 — built with [yusufshereef](https://github.com/yusufshereef). Sorting algorithms, timing engine and insight builder implemented from scratch.
+
+</div>
